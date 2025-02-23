@@ -9,6 +9,7 @@ pub struct Registers {
     pub f: FlagsRegister,
     pub h: u8,
     pub l: u8,
+    sp: u16,
 }
 
 impl Registers {
@@ -22,6 +23,7 @@ impl Registers {
             f: FlagsRegister::from(0x00 as u8),
             h: 0x00,
             l: 0x00,
+            sp: 0x0000,
         }
     }
 
@@ -59,6 +61,14 @@ impl Registers {
     pub fn set_hl(&mut self, value: u16) {
         self.h = ((value & 0xFF00) >> 8) as u8;
         self.l = (value & 0xFF) as u8;
+    }
+
+    pub fn get_sp(&self) -> u16 {
+        self.sp
+    }
+
+    pub fn set_sp(&mut self, value: u16) {
+        self.sp = value;
     }
 }
 

@@ -2,9 +2,15 @@ use crate::emulator_error::EmulatorError;
 
 use super::{arithmetic_target::ArithmeticTarget, arithmetic_target_pair::ArithmeticTargetPair};
 
+pub enum IndDecTarget {
+    Byte(ArithmeticTarget),
+    Word(ArithmeticTargetPair)
+}
+
 pub enum Instruction {
     ADD(ArithmeticTarget),
     ADDHL(ArithmeticTargetPair),
+    ADDSP(i8),
     ADC(ArithmeticTarget),
     SUB(ArithmeticTarget),
     SBC(ArithmeticTarget),
@@ -12,9 +18,8 @@ pub enum Instruction {
     OR(ArithmeticTarget),
     XOR(ArithmeticTarget),
     CP(ArithmeticTarget),
-    INC(ArithmeticTarget),
-    // INC(ArithmeticTargetPair),
-    DEC(ArithmeticTarget),
+    INC(IndDecTarget),
+    DEC(IndDecTarget),
     CCF,
     SCF,
     RRA,
@@ -38,7 +43,7 @@ pub enum Instruction {
 impl Instruction {
     pub fn from_byte(byte: u8) -> Result<Instruction, EmulatorError> {
         match byte {
-            // 0x02 => Ok(Instruction::INC(ArithmeticTargetPair::BC)),
+            // 0x03 => Ok(Instruction::INC(IndDecTarget::)),
             // 0x13 => Ok(Instruction::INC(ArithmeticTargetPair::DE)),
             _ => Err(EmulatorError::UnknownInstruction(byte))
         }

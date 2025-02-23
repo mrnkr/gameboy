@@ -1,4 +1,4 @@
-use super::{arithmetic_operators::{add::add, add_c::add_c, add_hl::add_hl, sub::sub, sub_c::sub_c}, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::get_value_in_arithmetic_target_pair, bit::{bit_check::bit_check, bit_reset::bit_reset, bit_set::bit_set}, complement::complement, instruction::Instruction, logical_operators::{and::and, or::or, xor::xor}, memory_bus::MemoryBus, registers::Registers, rotation_operators::{rotate_left::{rotate_left, rotate_left_through_carry}, rotate_right::{rotate_right, rotate_right_through_carry}, shift_left::shift_left, shift_right_arithmetic::shift_right_arithmetic, shift_right_logical::shift_right_logical, swap_nibbles::swap_nibbles}};
+use super::{arithmetic_operators::{add::add, add_c::add_c, add_hl::add_hl, sub::sub, sub_c::sub_c}, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::{get_value_in_arithmetic_target_pair, set_value_in_arithmetic_target_pair}, bit::{bit_check::bit_check, bit_reset::bit_reset, bit_set::bit_set}, complement::complement, instruction::{IndDecTarget, Instruction}, logical_operators::{and::and, or::or, xor::xor}, memory_bus::MemoryBus, registers::Registers, rotation_operators::{rotate_left::{rotate_left, rotate_left_through_carry}, rotate_right::{rotate_right, rotate_right_through_carry}, shift_left::shift_left, shift_right_arithmetic::shift_right_arithmetic, shift_right_logical::shift_right_logical, swap_nibbles::swap_nibbles}};
 
 pub struct CPU {
     pub registers: Registers,
@@ -16,7 +16,7 @@ impl CPU {
     }
 
     fn step(&mut self) {
-        let mut instruction_byte = self.bus.read_byte(self.pc);
+        let instruction_byte = self.bus.read_byte(self.pc);
 
         let next_pc = if let Ok(instruction) = Instruction::from_byte(instruction_byte) {
             self.execute(instruction);
@@ -37,6 +37,12 @@ impl CPU {
             Instruction::ADDHL(target) => {
                 let value = get_value_in_arithmetic_target_pair(self, &target);
                 let new_value = add_hl(self.registers.get_hl(), value, &mut self.registers.f);
+                self.registers.set_hl(new_value);
+            }
+            Instruction::ADDSP(offset) => {
+                let value = self.registers.get_sp();
+                let new_value = add_hl(value, offset as u16, &mut self.registers.f);
+                self.registers.f.zero = false;
                 self.registers.set_hl(new_value);
             }
             Instruction::ADC(target) => {
@@ -74,14 +80,30 @@ impl CPU {
                 sub(self.registers.a, value, &mut self.registers.f);
             }
             Instruction::INC(target) => {
-                let value = get_value_in_arithmetic_target(self, &target);
-                let new_value = add(value, 0x01, &mut self.registers.f);
-                set_value_in_arithmetic_target(self, &target, new_value);
+                match target {
+                    IndDecTarget::Byte(target) => {
+                        let value = get_value_in_arithmetic_target(self, &target);
+                        let new_value = add(value, 0x01, &mut self.registers.f);
+                        set_value_in_arithmetic_target(self, &target, new_value);
+                    }
+                    IndDecTarget::Word(target) => {
+                        let value = get_value_in_arithmetic_target_pair(self, &target);
+                        set_value_in_arithmetic_target_pair(self, &target, value + 0x0001);
+                    }
+                }
             }
             Instruction::DEC(target) => {
-                let value = get_value_in_arithmetic_target(self, &target);
-                let new_value = sub(value, 0x01, &mut self.registers.f);
-                set_value_in_arithmetic_target(self, &target, new_value);
+                match target {
+                    IndDecTarget::Byte(target) => {
+                        let value = get_value_in_arithmetic_target(self, &target);
+                        let new_value = sub(value, 0x01, &mut self.registers.f);
+                        set_value_in_arithmetic_target(self, &target, new_value);
+                    }
+                    IndDecTarget::Word(target) => {
+                        let value = get_value_in_arithmetic_target_pair(self, &target);
+                        set_value_in_arithmetic_target_pair(self, &target, value - 0x0001);
+                    }
+                }
             }
             Instruction::CCF => self.registers.f.carry = !self.registers.f.carry,
             Instruction::SCF => self.registers.f.carry = true,
