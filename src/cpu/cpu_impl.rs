@@ -1,4 +1,4 @@
-use super::{arithmetic_operators::{add::add, add_c::add_c, add_hl::add_hl, sub::sub, sub_c::sub_c}, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::{get_value_in_arithmetic_target_pair, set_value_in_arithmetic_target_pair}, bit::{bit_check::bit_check, bit_reset::bit_reset, bit_set::bit_set}, complement::complement, instruction::{IndDecTarget, Instruction}, logical_operators::{and::and, or::or, xor::xor}, memory_bus::MemoryBus, registers::Registers, rotation_operators::{rotate_left::{rotate_left, rotate_left_through_carry}, rotate_right::{rotate_right, rotate_right_through_carry}, shift_left::shift_left, shift_right_arithmetic::shift_right_arithmetic, shift_right_logical::shift_right_logical, swap_nibbles::swap_nibbles}};
+use super::{arithmetic_operators::{add::add, add_c::add_c, add_hl::add_hl, sub::sub, sub_c::sub_c}, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::{get_value_in_arithmetic_target_pair, set_value_in_arithmetic_target_pair}, bit::{bit_check::bit_check, bit_reset::bit_reset, bit_set::bit_set}, complement::complement, instruction::{IncDecTarget, Instruction}, logical_operators::{and::and, or::or, xor::xor}, memory_bus::MemoryBus, registers::Registers, rotation_operators::{rotate_left::{rotate_left, rotate_left_through_carry}, rotate_right::{rotate_right, rotate_right_through_carry}, shift_left::shift_left, shift_right_arithmetic::shift_right_arithmetic, shift_right_logical::shift_right_logical, swap_nibbles::swap_nibbles}};
 
 pub struct CPU {
     pub registers: Registers,
@@ -16,9 +16,13 @@ impl CPU {
     }
 
     fn step(&mut self) {
-        let instruction_byte = self.bus.read_byte(self.pc);
+        let mut instruction_byte = self.bus.read_byte(self.pc);
+        let prefixed = instruction_byte == 0xCB;
+        if prefixed {
+            instruction_byte = self.bus.read_byte(self.pc + 1);
+        }
 
-        let next_pc = if let Ok(instruction) = Instruction::from_byte(instruction_byte) {
+        let next_pc = if let Ok(instruction) = Instruction::from_byte(instruction_byte, prefixed) {
             self.execute(instruction);
         } else {
             panic!("Unkown instruction found for: 0x{:x}", instruction_byte);
@@ -81,12 +85,12 @@ impl CPU {
             }
             Instruction::INC(target) => {
                 match target {
-                    IndDecTarget::Byte(target) => {
+                    IncDecTarget::Byte(target) => {
                         let value = get_value_in_arithmetic_target(self, &target);
                         let new_value = add(value, 0x01, &mut self.registers.f);
                         set_value_in_arithmetic_target(self, &target, new_value);
                     }
-                    IndDecTarget::Word(target) => {
+                    IncDecTarget::Word(target) => {
                         let value = get_value_in_arithmetic_target_pair(self, &target);
                         set_value_in_arithmetic_target_pair(self, &target, value + 0x0001);
                     }
@@ -94,12 +98,12 @@ impl CPU {
             }
             Instruction::DEC(target) => {
                 match target {
-                    IndDecTarget::Byte(target) => {
+                    IncDecTarget::Byte(target) => {
                         let value = get_value_in_arithmetic_target(self, &target);
                         let new_value = sub(value, 0x01, &mut self.registers.f);
                         set_value_in_arithmetic_target(self, &target, new_value);
                     }
-                    IndDecTarget::Word(target) => {
+                    IncDecTarget::Word(target) => {
                         let value = get_value_in_arithmetic_target_pair(self, &target);
                         set_value_in_arithmetic_target_pair(self, &target, value - 0x0001);
                     }
