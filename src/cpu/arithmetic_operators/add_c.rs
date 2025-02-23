@@ -1,4 +1,5 @@
-use super::{add::add, flag_registers::FlagsRegister};
+use crate::cpu::flag_registers::FlagsRegister;
+use super::add::add;
 
 pub fn add_c(left: u8, right: u8, flags: &mut FlagsRegister) -> u8 {
     let mut new_value = add(left, right, flags);

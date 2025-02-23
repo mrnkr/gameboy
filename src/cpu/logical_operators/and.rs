@@ -1,4 +1,4 @@
-use super::flag_registers::FlagsRegister;
+use crate::cpu::flag_registers::FlagsRegister;
 
 pub fn and(left: u8, right: u8, flags: &mut FlagsRegister) -> u8 {
     let result = left & right;

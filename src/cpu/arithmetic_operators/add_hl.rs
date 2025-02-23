@@ -1,4 +1,4 @@
-use super::flag_registers::FlagsRegister;
+use crate::cpu::flag_registers::FlagsRegister;
 
 pub fn add_hl(left: u16, right: u16, flags: &mut FlagsRegister) -> u16 {
     let (new_value, did_overflow) = left.overflowing_add(right);
