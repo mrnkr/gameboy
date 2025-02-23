@@ -35,24 +35,24 @@ mod tests {
 
     #[rstest]
     #[case(0x00, false, 0x00, false)]
-    #[case(0x00, true,  0x00, false)]
+    #[case(0x00, true, 0x00, false)]
     #[case(0x01, false, 0x02, false)]
-    #[case(0x01, true,  0x02, false)]
+    #[case(0x01, true, 0x02, false)]
     #[case(0xFF, false, 0xFF, true)]
-    #[case(0xFF, true,  0xFF, true)]
+    #[case(0xFF, true, 0xFF, true)]
     #[case(0x80, false, 0x01, true)]
-    #[case(0x80, true,  0x01, true)]
+    #[case(0x80, true, 0x01, true)]
     fn should_rotate_left(
         #[case] value: u8,
         #[case] carry_in: bool,
         #[case] expected_result: u8,
-        #[case] expected_carry: bool
+        #[case] expected_carry: bool,
     ) {
         let mut flags = FlagsRegister {
             carry: carry_in,
             half_carry: true,
             subtract: true,
-            zero: true
+            zero: true,
         };
 
         let result = rotate_left(value, &mut flags);
@@ -66,24 +66,24 @@ mod tests {
 
     #[rstest]
     #[case(0x00, false, 0x00, false)]
-    #[case(0x00, true,  0x01, false)]
+    #[case(0x00, true, 0x01, false)]
     #[case(0x01, false, 0x02, false)]
-    #[case(0x01, true,  0x03, false)]
+    #[case(0x01, true, 0x03, false)]
     #[case(0xFF, false, 0xFE, true)]
-    #[case(0xFF, true,  0xFF, true)]
+    #[case(0xFF, true, 0xFF, true)]
     #[case(0x80, false, 0x00, true)]
-    #[case(0x80, true,  0x01, true)]
+    #[case(0x80, true, 0x01, true)]
     fn should_rotate_left_though_carry(
         #[case] value: u8,
         #[case] carry_in: bool,
         #[case] expected_result: u8,
-        #[case] expected_carry: bool
+        #[case] expected_carry: bool,
     ) {
         let mut flags = FlagsRegister {
             carry: carry_in,
             half_carry: true,
             subtract: true,
-            zero: true
+            zero: true,
         };
 
         let result = rotate_left_through_carry(value, &mut flags);

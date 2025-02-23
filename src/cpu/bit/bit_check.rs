@@ -1,5 +1,5 @@
-use crate::cpu::flag_registers::FlagsRegister;
 use super::bit_index::BitIndex;
+use crate::cpu::flag_registers::FlagsRegister;
 
 pub fn bit_check(value: u8, idx: u8, flags: &mut FlagsRegister) {
     if let Ok(bit_idx) = BitIndex::build(idx) {
@@ -30,11 +30,7 @@ mod tests {
     #[case(0b1111_1111, 7, false)]
     #[case(0b0000_0001, 1, true)]
     #[case(0b0000_0001, 0, false)]
-    fn should_perform_bit_check(
-        #[case] value: u8,
-        #[case] idx: u8,
-        #[case] expected_zero: bool
-    ) {
+    fn should_perform_bit_check(#[case] value: u8, #[case] idx: u8, #[case] expected_zero: bool) {
         let mut flags = FlagsRegister::from(0x00 as u8);
 
         bit_check(value, idx, &mut flags);
@@ -49,10 +45,7 @@ mod tests {
     #[case(0b0000_0000, 8)]
     #[case(0b1000_0000, 25)]
     #[case(0b1010_1010, 10)]
-    fn should_perform_noop(
-        #[case] value: u8,
-        #[case] idx: u8,
-    ) {
+    fn should_perform_noop(#[case] value: u8, #[case] idx: u8) {
         let mut flags = FlagsRegister::from(0x00 as u8);
 
         bit_check(value, idx, &mut flags);

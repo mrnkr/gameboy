@@ -27,7 +27,7 @@ mod tests {
     fn should_swap_nibbles(
         #[case] value: u8,
         #[case] expected_result: u8,
-        #[case] expected_zero: bool
+        #[case] expected_zero: bool,
     ) {
         let mut flags = FlagsRegister::from(0x00 as u8);
 

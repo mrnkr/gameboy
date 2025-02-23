@@ -39,7 +39,7 @@ mod tests {
     #[case(25, Err(EmulatorError::OutOfBoundsIndex(25)))]
     fn should_build_bit_index(
         #[case] idx: u8,
-        #[case] expected_result: Result<BitIndex, EmulatorError>
+        #[case] expected_result: Result<BitIndex, EmulatorError>,
     ) {
         let result = BitIndex::build(idx);
         assert_eq!(result, expected_result);

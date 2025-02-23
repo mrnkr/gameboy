@@ -26,10 +26,10 @@ mod tests {
     #[case(0b1111_1111, 0b0000_0000, 0b0000_0000, true)] // AND with zero
     #[case(0b0000_0001, 0b0000_0001, 0b0000_0001, false)] // Single-bit set
     fn should_perform_and_operation(
-        #[case] left:u8,
+        #[case] left: u8,
         #[case] right: u8,
         #[case] expected_result: u8,
-        #[case] expected_zero: bool
+        #[case] expected_zero: bool,
     ) {
         let mut flags = FlagsRegister::from(0x00 as u8);
 

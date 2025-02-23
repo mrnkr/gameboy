@@ -19,13 +19,13 @@ mod tests {
 
     #[rstest]
     #[case(0x00, false, 0x00, false, true)]
-    #[case(0x00, true,  0x00, false, true)]
+    #[case(0x00, true, 0x00, false, true)]
     #[case(0x01, false, 0x02, false, false)]
-    #[case(0x01, true,  0x02, false, false)]
+    #[case(0x01, true, 0x02, false, false)]
     #[case(0xFF, false, 0xFE, true, false)]
-    #[case(0xFF, true,  0xFE, true, false)]
+    #[case(0xFF, true, 0xFE, true, false)]
     #[case(0x80, false, 0x00, true, true)]
-    #[case(0x80, true,  0x00, true, true)]
+    #[case(0x80, true, 0x00, true, true)]
     fn should_shift_left(
         #[case] value: u8,
         #[case] carry_in: bool,
@@ -37,7 +37,7 @@ mod tests {
             carry: carry_in,
             half_carry: true,
             subtract: true,
-            zero: true
+            zero: true,
         };
 
         let result = shift_left(value, &mut flags);

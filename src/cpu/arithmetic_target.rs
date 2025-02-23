@@ -8,17 +8,25 @@ pub enum ArithmeticTarget {
     E,
     H,
     L,
+    /// operations that affect the value in memory at position [HL]
+    HL,
+    Constant,
 }
 
-pub fn get_value_in_arithmetic_target(cpu: &CPU, target: &ArithmeticTarget) -> u8 {
+pub fn get_value_in_arithmetic_target(cpu: &mut CPU, target: &ArithmeticTarget) -> (u8, u16) {
     match target {
-        ArithmeticTarget::A => cpu.registers.a,
-        ArithmeticTarget::B => cpu.registers.b,
-        ArithmeticTarget::C => cpu.registers.c,
-        ArithmeticTarget::D => cpu.registers.d,
-        ArithmeticTarget::E => cpu.registers.e,
-        ArithmeticTarget::H => cpu.registers.h,
-        ArithmeticTarget::L => cpu.registers.l,
+        ArithmeticTarget::A => (cpu.registers.a, 1),
+        ArithmeticTarget::B => (cpu.registers.b, 1),
+        ArithmeticTarget::C => (cpu.registers.c, 1),
+        ArithmeticTarget::D => (cpu.registers.d, 1),
+        ArithmeticTarget::E => (cpu.registers.e, 1),
+        ArithmeticTarget::H => (cpu.registers.h, 1),
+        ArithmeticTarget::L => (cpu.registers.l, 1),
+        ArithmeticTarget::HL => {
+            let value = cpu.bus.read_byte(cpu.registers.get_hl());
+            (value, 1)
+        }
+        ArithmeticTarget::Constant => (cpu.bus.read_byte(cpu.pc + 1), 2),
     }
 }
 
@@ -31,5 +39,7 @@ pub fn set_value_in_arithmetic_target(cpu: &mut CPU, target: &ArithmeticTarget, 
         ArithmeticTarget::E => cpu.registers.e = new_value,
         ArithmeticTarget::H => cpu.registers.h = new_value,
         ArithmeticTarget::L => cpu.registers.l = new_value,
+        ArithmeticTarget::HL => cpu.bus.write_byte(cpu.registers.get_hl(), new_value),
+        ArithmeticTarget::Constant => (),
     }
 }

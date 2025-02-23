@@ -27,11 +27,7 @@ mod tests {
     #[case(0b1111_1111, 7, 0b1111_1111)]
     #[case(0b0000_0001, 1, 0b0000_0011)]
     #[case(0b0000_0001, 0, 0b0000_0001)]
-    fn should_perform_bit_check(
-        #[case] value: u8,
-        #[case] idx: u8,
-        #[case] expected_result: u8,
-    ) {
+    fn should_perform_bit_check(#[case] value: u8, #[case] idx: u8, #[case] expected_result: u8) {
         let result = bit_set(value, idx);
 
         assert_eq!(result, expected_result);
@@ -41,10 +37,7 @@ mod tests {
     #[case(0b0000_0000, 8)]
     #[case(0b1000_0000, 25)]
     #[case(0b1010_1010, 10)]
-    fn should_perform_noop(
-        #[case] value: u8,
-        #[case] idx: u8,
-    ) {
+    fn should_perform_noop(#[case] value: u8, #[case] idx: u8) {
         let result = bit_set(value, idx);
 
         assert_eq!(result, value);

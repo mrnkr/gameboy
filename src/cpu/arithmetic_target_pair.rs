@@ -16,7 +16,11 @@ pub fn get_value_in_arithmetic_target_pair(cpu: &CPU, target: &ArithmeticTargetP
     }
 }
 
-pub fn set_value_in_arithmetic_target_pair(cpu: &mut CPU, target: &ArithmeticTargetPair, new_value: u16) {
+pub fn set_value_in_arithmetic_target_pair(
+    cpu: &mut CPU,
+    target: &ArithmeticTargetPair,
+    new_value: u16,
+) {
     match target {
         ArithmeticTargetPair::BC => cpu.registers.set_bc(new_value),
         ArithmeticTargetPair::DE => cpu.registers.set_de(new_value),

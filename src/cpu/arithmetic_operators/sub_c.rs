@@ -1,5 +1,5 @@
-use crate::cpu::flag_registers::FlagsRegister;
 use super::sub::sub;
+use crate::cpu::flag_registers::FlagsRegister;
 
 pub fn sub_c(left: u8, right: u8, flags: &mut FlagsRegister) -> u8 {
     let mut new_value = sub(left, right, flags);
@@ -41,4 +41,3 @@ mod tests {
         assert_eq!(flags.subtract, expected_subtract);
     }
 }
-
