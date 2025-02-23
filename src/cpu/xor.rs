@@ -25,7 +25,7 @@ mod tests {
     #[case(0b0000_1111, 0b1111_0000, 0b1111_1111, false)] // Non-overlapping bits (inverse of case above)
     #[case(0b1111_1111, 0b0000_0000, 0b1111_1111, false)] // XOR with zero
     #[case(0b0000_0001, 0b0000_0001, 0b0000_0000, true)] // Single-bit set
-    fn should_perform_xor_to_register_in_a(
+    fn should_perform_xor_operation(
         #[case] left:u8,
         #[case] right: u8,
         #[case] expected_result: u8,

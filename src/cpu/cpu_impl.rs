@@ -1,4 +1,4 @@
-use super::{add::add, add_c::add_c, add_hl::add_hl, and::and, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::get_value_in_arithmetic_target_pair, instruction::Instruction, or::or, registers::Registers, sub::sub, sub_c::sub_c, xor::xor};
+use super::{add::add, add_c::add_c, add_hl::add_hl, and::and, arithmetic_target::{get_value_in_arithmetic_target, set_value_in_arithmetic_target}, arithmetic_target_pair::get_value_in_arithmetic_target_pair, instruction::Instruction, or::or, registers::Registers, rotate_left::{rotate_left, rotate_left_through_carry}, rotate_right::{rotate_right, rotate_right_through_carry}, sub::sub, sub_c::sub_c, xor::xor};
 
 pub struct CPU {
     pub registers: Registers,
@@ -66,6 +66,24 @@ impl CPU {
                 let value = get_value_in_arithmetic_target(self, &target);
                 let new_value = sub(value, 0x01, &mut self.registers.f);
                 set_value_in_arithmetic_target(self, &target, new_value);
+            }
+            Instruction::CCF => self.registers.f.carry = !self.registers.f.carry,
+            Instruction::SCF => self.registers.f.carry = true,
+            Instruction::RRA => {
+                let new_value = rotate_right_through_carry(self.registers.a, &mut self.registers.f);
+                self.registers.a = new_value;
+            }
+            Instruction::RLA => {
+                let new_value = rotate_left_through_carry(self.registers.a, &mut self.registers.f);
+                self.registers.a = new_value;
+            }
+            Instruction::RRCA => {
+                let new_value = rotate_right(self.registers.a, &mut self.registers.f);
+                self.registers.a = new_value;
+            }
+            Instruction::RRLA => {
+                let new_value = rotate_left(self.registers.a, &mut self.registers.f);
+                self.registers.a = new_value;
             }
         }
     }

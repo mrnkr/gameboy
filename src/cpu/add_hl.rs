@@ -25,7 +25,7 @@ mod tests {
     #[case(0x08FF, 0x0701, 0x1000, false, true, false, false)] // Large add, Half-Carry
     #[case(0x1000, 0x0001, 0x1001, false, false, false, false)] // No carry, small add
     #[case(0x0000, 0x0000, 0x0000, false, false, true, false)] // Zero
-    fn should_add_value_to_hl_register_pair(
+    fn should_add_value(
         #[case] left: u16,
         #[case] right: u16,
         #[case] expected_result: u16,

@@ -20,7 +20,7 @@ mod tests {
     #[case(0x7F, 0x01, 0x80, false, true, false, false)] // Large add with Half-Carry
     #[case(0x10, 0x01, 0x11, false, false, false, false)] // No carry, small add
     #[case(0x00, 0x00, 0x00, false, false, true, false)] // Zero
-    fn should_add_with_carry_value_to_register_a(
+    fn should_add_with_carry(
         #[case] right: u8,
         #[case] left: u8,
         #[case] expected_result: u8,

@@ -21,7 +21,7 @@ mod tests {
     #[case(0x80, 0x01, 0x7F, false, true, false, true)] // Large sub, half borrow
     #[case(0x01, 0x01, 0x00, false, false, true, true)] // Zero result
     #[case(0x20, 0x10, 0x10, false, false, false, true)] // No borrow, regular subtraction
-    fn should_sub_value_to_register_a(
+    fn should_sub_values(
         #[case] left: u8,
         #[case] right: u8,
         #[case] expected_result: u8,

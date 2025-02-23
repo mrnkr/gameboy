@@ -12,4 +12,10 @@ pub enum Instruction {
     CP(ArithmeticTarget),
     INC(ArithmeticTarget),
     DEC(ArithmeticTarget),
+    CCF,
+    SCF,
+    RRA,
+    RLA,
+    RRCA,
+    RRLA,
 }
