@@ -11,5 +11,6 @@ mod complement;
 mod flag_registers;
 mod instruction;
 mod jump;
+mod load;
 mod memory_bus;
 mod registers;

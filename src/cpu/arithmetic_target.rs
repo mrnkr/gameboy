@@ -10,10 +10,10 @@ pub enum ArithmeticTarget {
     L,
     /// operations that affect the value in memory at position [HL]
     HL,
-    Constant,
+    D8,
 }
 
-pub fn get_value_in_arithmetic_target(cpu: &mut CPU, target: &ArithmeticTarget) -> (u8, u16) {
+pub fn get_value_in_arithmetic_target(cpu: &CPU, target: &ArithmeticTarget) -> (u8, u16) {
     match target {
         ArithmeticTarget::A => (cpu.registers.a, 1),
         ArithmeticTarget::B => (cpu.registers.b, 1),
@@ -26,7 +26,7 @@ pub fn get_value_in_arithmetic_target(cpu: &mut CPU, target: &ArithmeticTarget) 
             let value = cpu.bus.read_byte(cpu.registers.get_hl());
             (value, 1)
         }
-        ArithmeticTarget::Constant => (cpu.bus.read_byte(cpu.pc + 1), 2),
+        ArithmeticTarget::D8 => (cpu.read_next_byte(), 2),
     }
 }
 
@@ -40,6 +40,6 @@ pub fn set_value_in_arithmetic_target(cpu: &mut CPU, target: &ArithmeticTarget, 
         ArithmeticTarget::H => cpu.registers.h = new_value,
         ArithmeticTarget::L => cpu.registers.l = new_value,
         ArithmeticTarget::HL => cpu.bus.write_byte(cpu.registers.get_hl(), new_value),
-        ArithmeticTarget::Constant => (),
+        ArithmeticTarget::D8 => (),
     }
 }

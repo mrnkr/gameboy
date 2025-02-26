@@ -10,6 +10,7 @@ use super::{
     complement::complement,
     instruction::{IncDecTarget, Instruction},
     jump::{jump, jump_relative},
+    load::load,
     logical_operators::{and::and, or::or, xor::xor},
     memory_bus::MemoryBus,
     registers::Registers,
@@ -57,6 +58,7 @@ impl CPU {
     fn execute(&mut self, instruction: Instruction) -> u16 {
         match instruction {
             Instruction::NOP => self.pc.wrapping_add(1),
+            Instruction::LD(load_type) => load(self, &load_type),
             Instruction::JP(test) => jump(self, test),
             Instruction::JPHL => self.registers.get_hl(),
             Instruction::JR(test) => jump_relative(self, test),
@@ -75,7 +77,7 @@ impl CPU {
             Instruction::ADDSP => {
                 let value = self.registers.get_sp();
                 let (offset, pc_increment) =
-                    get_value_in_arithmetic_target(self, &ArithmeticTarget::Constant);
+                    get_value_in_arithmetic_target(self, &ArithmeticTarget::D8);
                 let new_value = add_hl(value, offset as u16, &mut self.registers.f);
                 self.registers.f.zero = false;
                 self.registers.set_sp(new_value);
@@ -251,5 +253,13 @@ impl CPU {
                 self.pc.wrapping_add(pc_increment)
             }
         }
+    }
+
+    pub fn read_next_byte(&self) -> u8 {
+        self.bus.read_byte(self.pc + 1)
+    }
+
+    pub fn read_next_word(&self) -> u16 {
+        self.bus.read_word(self.pc + 1)
     }
 }

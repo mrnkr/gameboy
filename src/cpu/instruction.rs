@@ -1,14 +1,14 @@
 use crate::emulator_error::EmulatorError;
 
-use super::{arithmetic_target::ArithmeticTarget, arithmetic_target_pair::ArithmeticTargetPair};
-
-pub enum JumpTest {
-    NotZero,
-    Zero,
-    NotCarry,
-    Carry,
-    Always,
-}
+use super::{
+    arithmetic_target::ArithmeticTarget,
+    arithmetic_target_pair::ArithmeticTargetPair,
+    jump::JumpTest,
+    load::{
+        AFromByteAddressSource, ByteAddressFromATarget, LoadAFromIndirectSource, LoadByteSource,
+        LoadByteTarget, LoadIndirectFromATarget, LoadType, LoadWordSource, LoadWordTarget,
+    },
+};
 
 pub enum IncDecTarget {
     Byte(ArithmeticTarget),
@@ -17,6 +17,7 @@ pub enum IncDecTarget {
 
 pub enum Instruction {
     NOP,
+    LD(LoadType),
     JP(JumpTest),
     JPHL,
     JR(JumpTest),
@@ -326,61 +327,389 @@ impl Instruction {
     fn from_byte_not_prefixed(byte: u8) -> Result<Instruction, EmulatorError> {
         match byte {
             0x00 => Ok(Instruction::NOP),
+            0x01 => Ok(Instruction::LD(LoadType::Word(
+                LoadWordTarget::BC,
+                LoadWordSource::D16,
+            ))),
+            0x02 => Ok(Instruction::LD(LoadType::IndirectFromA(
+                LoadIndirectFromATarget::BC,
+            ))),
             0x03 => Ok(Instruction::INC(IncDecTarget::Word(
                 ArithmeticTargetPair::BC,
             ))),
             0x04 => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::B))),
             0x05 => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::B))),
+            0x06 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::D8,
+            ))),
             0x07 => Ok(Instruction::RLCA),
             0x09 => Ok(Instruction::ADDHL(ArithmeticTargetPair::BC)),
+            0x0A => Ok(Instruction::LD(LoadType::AFromIndirect(
+                LoadAFromIndirectSource::BC,
+            ))),
             0x0B => Ok(Instruction::DEC(IncDecTarget::Word(
                 ArithmeticTargetPair::BC,
             ))),
             0x0C => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::C))),
             0x0D => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::C))),
+            0x0E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::D8,
+            ))),
             0x0F => Ok(Instruction::RRCA),
+            0x11 => Ok(Instruction::LD(LoadType::Word(
+                LoadWordTarget::DE,
+                LoadWordSource::D16,
+            ))),
+            0x12 => Ok(Instruction::LD(LoadType::IndirectFromA(
+                LoadIndirectFromATarget::DE,
+            ))),
             0x13 => Ok(Instruction::INC(IncDecTarget::Word(
                 ArithmeticTargetPair::DE,
             ))),
             0x14 => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::D))),
             0x15 => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::D))),
+            0x16 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::D8,
+            ))),
             0x17 => Ok(Instruction::RLA),
             0x18 => Ok(Instruction::JR(JumpTest::Always)),
             0x19 => Ok(Instruction::ADDHL(ArithmeticTargetPair::DE)),
+            0x1A => Ok(Instruction::LD(LoadType::AFromIndirect(
+                LoadAFromIndirectSource::DE,
+            ))),
             0x1B => Ok(Instruction::DEC(IncDecTarget::Word(
                 ArithmeticTargetPair::DE,
             ))),
             0x1C => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::E))),
             0x1D => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::E))),
+            0x1E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::D8,
+            ))),
             0x1F => Ok(Instruction::RRA),
             0x20 => Ok(Instruction::JR(JumpTest::NotZero)),
+            0x21 => Ok(Instruction::LD(LoadType::Word(
+                LoadWordTarget::HL,
+                LoadWordSource::D16,
+            ))),
+            0x22 => Ok(Instruction::LD(LoadType::IndirectFromA(
+                LoadIndirectFromATarget::HLI,
+            ))),
             0x23 => Ok(Instruction::INC(IncDecTarget::Word(
                 ArithmeticTargetPair::HL,
             ))),
             0x24 => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::H))),
             0x25 => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::H))),
+            0x26 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::D8,
+            ))),
             0x28 => Ok(Instruction::JR(JumpTest::Zero)),
             0x29 => Ok(Instruction::ADDHL(ArithmeticTargetPair::HL)),
+            0x2A => Ok(Instruction::LD(LoadType::AFromIndirect(
+                LoadAFromIndirectSource::HLI,
+            ))),
             0x2B => Ok(Instruction::DEC(IncDecTarget::Word(
                 ArithmeticTargetPair::HL,
             ))),
             0x2C => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::L))),
             0x2D => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::L))),
+            0x2E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::D8,
+            ))),
             0x2F => Ok(Instruction::CPL),
             0x30 => Ok(Instruction::JR(JumpTest::NotCarry)),
+            0x31 => Ok(Instruction::LD(LoadType::Word(
+                LoadWordTarget::SP,
+                LoadWordSource::D16,
+            ))),
+            0x32 => Ok(Instruction::LD(LoadType::IndirectFromA(
+                LoadIndirectFromATarget::HLD,
+            ))),
             0x33 => Ok(Instruction::INC(IncDecTarget::Word(
                 ArithmeticTargetPair::SP,
             ))),
             0x34 => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::HL))),
             0x35 => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::HL))),
+            0x36 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::D8,
+            ))),
             0x38 => Ok(Instruction::JR(JumpTest::Carry)),
             0x39 => Ok(Instruction::ADDHL(ArithmeticTargetPair::SP)),
+            0x3A => Ok(Instruction::LD(LoadType::AFromIndirect(
+                LoadAFromIndirectSource::HLD,
+            ))),
             0x3B => Ok(Instruction::DEC(IncDecTarget::Word(
                 ArithmeticTargetPair::SP,
             ))),
             0x3C => Ok(Instruction::INC(IncDecTarget::Byte(ArithmeticTarget::A))),
             0x3D => Ok(Instruction::DEC(IncDecTarget::Byte(ArithmeticTarget::A))),
+            0x3E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::D8,
+            ))),
             0x3F => Ok(Instruction::CCF),
+            0x40 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::B,
+            ))),
+            0x41 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::C,
+            ))),
+            0x42 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::D,
+            ))),
+            0x43 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::E,
+            ))),
+            0x44 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::H,
+            ))),
+            0x45 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::L,
+            ))),
+            0x46 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::HLI,
+            ))),
+            0x47 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::B,
+                LoadByteSource::A,
+            ))),
+            0x48 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::B,
+            ))),
+            0x49 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::C,
+            ))),
+            0x4A => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::D,
+            ))),
+            0x4B => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::E,
+            ))),
+            0x4C => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::H,
+            ))),
+            0x4D => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::L,
+            ))),
+            0x4E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::HLI,
+            ))),
+            0x4F => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::C,
+                LoadByteSource::A,
+            ))),
+            0x50 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::B,
+            ))),
+            0x51 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::C,
+            ))),
+            0x52 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::D,
+            ))),
+            0x53 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::E,
+            ))),
+            0x54 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::H,
+            ))),
+            0x55 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::L,
+            ))),
+            0x56 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::HLI,
+            ))),
+            0x57 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::D,
+                LoadByteSource::A,
+            ))),
+            0x58 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::B,
+            ))),
+            0x59 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::C,
+            ))),
+            0x5A => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::D,
+            ))),
+            0x5B => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::E,
+            ))),
+            0x5C => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::H,
+            ))),
+            0x5D => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::L,
+            ))),
+            0x5E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::HLI,
+            ))),
+            0x5F => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::E,
+                LoadByteSource::A,
+            ))),
+            0x60 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::B,
+            ))),
+            0x61 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::C,
+            ))),
+            0x62 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::D,
+            ))),
+            0x63 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::E,
+            ))),
+            0x64 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::H,
+            ))),
+            0x65 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::L,
+            ))),
+            0x66 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::HLI,
+            ))),
+            0x67 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::H,
+                LoadByteSource::A,
+            ))),
+            0x68 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::B,
+            ))),
+            0x69 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::C,
+            ))),
+            0x6A => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::D,
+            ))),
+            0x6B => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::E,
+            ))),
+            0x6C => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::H,
+            ))),
+            0x6D => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::L,
+            ))),
+            0x6E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::HLI,
+            ))),
+            0x6F => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::L,
+                LoadByteSource::A,
+            ))),
+            0x70 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::B,
+            ))),
+            0x71 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::C,
+            ))),
+            0x72 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::D,
+            ))),
+            0x73 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::E,
+            ))),
+            0x74 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::H,
+            ))),
+            0x75 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::L,
+            ))),
+            0x76 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::HLI,
+            ))),
+            0x77 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::HLI,
+                LoadByteSource::A,
+            ))),
+            0x78 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::B,
+            ))),
+            0x79 => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::C,
+            ))),
+            0x7A => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::D,
+            ))),
+            0x7B => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::E,
+            ))),
+            0x7C => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::H,
+            ))),
+            0x7D => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::L,
+            ))),
+            0x7E => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::HLI,
+            ))),
+            0x7F => Ok(Instruction::LD(LoadType::Byte(
+                LoadByteTarget::A,
+                LoadByteSource::A,
+            ))),
             0x80 => Ok(Instruction::ADD(ArithmeticTarget::B)),
             0x81 => Ok(Instruction::ADD(ArithmeticTarget::C)),
             0x82 => Ok(Instruction::ADD(ArithmeticTarget::D)),
@@ -442,8 +771,26 @@ impl Instruction {
             0xCA => Ok(Instruction::JP(JumpTest::Zero)),
             0xD2 => Ok(Instruction::JP(JumpTest::NotCarry)),
             0xDA => Ok(Instruction::JP(JumpTest::Carry)),
+            0xE0 => Ok(Instruction::LD(LoadType::ByteAddressFromA(
+                ByteAddressFromATarget::D8,
+            ))),
+            0xE2 => Ok(Instruction::LD(LoadType::ByteAddressFromA(
+                ByteAddressFromATarget::C,
+            ))),
             0xE8 => Ok(Instruction::ADDSP),
             0xE9 => Ok(Instruction::JPHL),
+            0xEA => Ok(Instruction::LD(LoadType::IndirectFromA(
+                LoadIndirectFromATarget::D16,
+            ))),
+            0xF0 => Ok(Instruction::LD(LoadType::AFromByteAddress(
+                AFromByteAddressSource::D8,
+            ))),
+            0xF2 => Ok(Instruction::LD(LoadType::AFromByteAddress(
+                AFromByteAddressSource::C,
+            ))),
+            0xFA => Ok(Instruction::LD(LoadType::AFromIndirect(
+                LoadAFromIndirectSource::D16,
+            ))),
             _ => Err(EmulatorError::UnknownInstruction(byte)),
         }
     }
