@@ -7,7 +7,9 @@ use super::{
 pub struct CPU {
     pub registers: Registers,
     pub pc: u16,
+    pub sp: u16,
     pub bus: MemoryBus,
+    pub is_halted: bool
 }
 
 impl CPU {
@@ -15,7 +17,9 @@ impl CPU {
         CPU {
             registers: Registers::new(),
             pc: 0,
+            sp: 0xFFFE,
             bus: MemoryBus::new(),
+            is_halted: false,
         }
     }
 
@@ -44,5 +48,23 @@ impl CPU {
 
     pub fn read_next_word(&self) -> u16 {
         self.bus.read_word(self.pc + 1)
+    }
+
+    pub fn print_missing_instructions(&self) {
+        println!("Missing unprefixed instructions:");
+
+        for i in 0x00u8..=0xFF {
+            if !INSTRUCTION_TABLE.unprefixed.contains_key(&i) {
+                println!("{:#04x}", i);
+            }
+        }
+
+        println!("Missing prefixed instructions:");
+        
+        for i in 0x00u8..=0xFF {
+            if !INSTRUCTION_TABLE.prefixed.contains_key(&i) {
+                println!("{:#04x}", i);
+            }
+        }
     }
 }

@@ -1,3 +1,6 @@
+use gameboy::cpu::cpu_impl::CPU;
+
 fn main() {
-    println!("Hello, world!");
+    let cpu = CPU::new();
+    // cpu.print_missing_instructions();
 }

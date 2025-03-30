@@ -79,6 +79,7 @@ pub enum LoadType {
 }
 
 #[instruction(0x01, LoadType::Word(LoadWordTarget::BC, LoadWordSource::D16))]
+#[instruction(0x08, LoadType::Word(LoadWordTarget::D16, LoadWordSource::SP))]
 #[instruction(0x11, LoadType::Word(LoadWordTarget::DE, LoadWordSource::D16))]
 #[instruction(0x21, LoadType::Word(LoadWordTarget::HL, LoadWordSource::D16))]
 #[instruction(0x31, LoadType::Word(LoadWordTarget::SP, LoadWordSource::D16))]

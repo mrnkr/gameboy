@@ -6,6 +6,8 @@ use crate::cpu::{
     instruction::InstructionEntry,
 };
 
+use super::stack::{pop, push};
+
 pub enum JumpTest {
     NotZero,
     Zero,
@@ -39,16 +41,56 @@ fn handle_jr(cpu: &mut CPU, test: JumpTest) {
     cpu.pc = next_pc;
 }
 
+#[instruction(0xC4, JumpTest::NotZero)]
+#[instruction(0xCC, JumpTest::Zero)]
+#[instruction(0xCD, JumpTest::Always)]
+#[instruction(0xD4, JumpTest::NotCarry)]
+#[instruction(0xDC, JumpTest::Carry)]
+fn handle_call(cpu: &mut CPU, test: JumpTest) {
+    let next_pc = call(cpu, test);
+    cpu.pc = next_pc;
+}
+
+#[instruction(0xC0, JumpTest::NotZero)]
+#[instruction(0xC8, JumpTest::Zero)]
+#[instruction(0xC9, JumpTest::Always)]
+#[instruction(0xD0, JumpTest::NotCarry)]
+#[instruction(0xD8, JumpTest::Carry)]
+fn handle_ret(cpu: &mut CPU, test: JumpTest) {
+    let next_pc = return_(cpu, test);
+    cpu.pc = next_pc;
+}
+
 pub fn jump(cpu: &CPU, test: JumpTest) -> u16 {
     jump_internal(cpu, test, 3, || cpu.read_next_word())
 }
 
-pub fn jump_relative(cpu: &CPU, test: JumpTest) -> u16 {
+fn jump_relative(cpu: &CPU, test: JumpTest) -> u16 {
     jump_internal(cpu, test, 2, || {
         // The Game Boy's JR instruction uses an 8-bit signed offset relative to the current PC
         let offset = cpu.bus.read_byte(cpu.pc + 1) as i8;
         cpu.pc.wrapping_add(2).wrapping_add(offset as u16)
     })
+}
+
+pub fn call(cpu: &mut CPU, test: JumpTest) -> u16 {
+    let next_pc = cpu.pc.wrapping_add(3);
+    let should_jump = evaluate_test(&cpu.registers.f, test);
+    if should_jump {
+      push(cpu, next_pc);
+      cpu.read_next_word()
+    } else {
+      next_pc
+    }
+}
+
+pub fn return_(cpu: &mut CPU, test: JumpTest) -> u16 {
+    let should_jump = evaluate_test(&cpu.registers.f, test);
+    if should_jump {
+      pop(cpu)
+    } else {
+      cpu.pc.wrapping_add(1)
+    }
 }
 
 fn jump_internal<F>(cpu: &CPU, test: JumpTest, instruction_size: u16, perform_jump: F) -> u16
@@ -102,9 +144,7 @@ mod tests {
         let mut cpu = CPU::new();
 
         cpu.bus
-            .write_byte(cpu.pc + 1, (requested_pc & 0x00FF) as u8);
-        cpu.bus
-            .write_byte(cpu.pc + 2, ((requested_pc & 0xFF00) >> 8) as u8);
+            .write_word(cpu.pc + 1, requested_pc);
 
         cpu.registers.f.zero = zero;
         cpu.registers.f.carry = carry;
@@ -156,6 +196,71 @@ mod tests {
         cpu.registers.f.carry = carry;
 
         let next_pc = jump_relative(&cpu, test);
+
+        assert_eq!(next_pc, expected_pc);
+    }
+
+    #[rstest]
+    #[case(JumpTest::NotZero, 0xBA99, true, true, 0x0003)]
+    #[case(JumpTest::NotZero, 0xBA99, false, true, 0xBA99)]
+    #[case(JumpTest::NotCarry, 0xBA99, true, true, 0x0003)]
+    #[case(JumpTest::NotCarry, 0xBA99, true, false, 0xBA99)]
+    #[case(JumpTest::Carry, 0xBA99, true, false, 0x0003)]
+    #[case(JumpTest::Carry, 0xBA99, true, true, 0xBA99)]
+    #[case(JumpTest::Zero, 0xBA99, false, false, 0x0003)]
+    #[case(JumpTest::Zero, 0xBA99, true, true, 0xBA99)]
+    #[case(JumpTest::Always, 0xBA99, true, true, 0xBA99)]
+    #[case(JumpTest::Always, 0xBA99, true, false, 0xBA99)]
+    #[case(JumpTest::Always, 0xBA99, false, true, 0xBA99)]
+    #[case(JumpTest::Always, 0xBA99, false, false, 0xBA99)]
+    fn should_call(
+        #[case] test: JumpTest,
+        #[case] requested_pc: u16,
+        #[case] zero: bool,
+        #[case] carry: bool,
+        #[case] expected_pc: u16,
+    ) {
+        let mut cpu = CPU::new();
+
+        cpu.bus
+            .write_word(cpu.pc + 1, requested_pc);
+
+        cpu.registers.f.zero = zero;
+        cpu.registers.f.carry = carry;
+
+        let next_pc = call(&mut cpu, test);
+
+        assert_eq!(next_pc, expected_pc);
+    }
+
+    #[rstest]
+    #[case(JumpTest::NotZero, true, true, 0x0001)]
+    #[case(JumpTest::NotZero, false, true, 0xBA99)]
+    #[case(JumpTest::NotCarry, true, true, 0x0001)]
+    #[case(JumpTest::NotCarry, true, false, 0xBA99)]
+    #[case(JumpTest::Carry, true, false, 0x0001)]
+    #[case(JumpTest::Carry, true, true, 0xBA99)]
+    #[case(JumpTest::Zero, false, false, 0x0001)]
+    #[case(JumpTest::Zero, true, true, 0xBA99)]
+    #[case(JumpTest::Always, true, true, 0xBA99)]
+    #[case(JumpTest::Always, true, false, 0xBA99)]
+    #[case(JumpTest::Always, false, true, 0xBA99)]
+    #[case(JumpTest::Always, false, false, 0xBA99)]
+    fn should_return(
+        #[case] test: JumpTest,
+        #[case] zero: bool,
+        #[case] carry: bool,
+        #[case] expected_pc: u16,
+    ) {
+        let mut cpu = CPU::new();
+
+        cpu.sp = cpu.sp.wrapping_sub(2);
+        cpu.bus.write_word(cpu.sp, 0xBA99);
+
+        cpu.registers.f.zero = zero;
+        cpu.registers.f.carry = carry;
+
+        let next_pc = return_(&mut cpu, test);
 
         assert_eq!(next_pc, expected_pc);
     }
